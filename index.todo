@@ -1,0 +1,35 @@
+Endpoint to register users = POST/users  Done
+input Data= {name, email, password}
+
+Endpoint to get all users = GET/users   Done
+output Data = {name, email, password}
+
+Endpoint to get single user = GET/users/:userId  Done
+params = userId
+Output Data = {name, email, passowrd}
+
+Endpoit to login user = POST/users/login  Partially Done.
+input Data= {email, password}
+output Data = {name, email}
+
+Endpoint to logout user = POST/logout
+input Data = {name, password}
+
+Endpoint to delete user account = DELETE/users/:userId  Done
+params = userId
+
+Endpoint to create task = POST/tasklist  Done
+input Data = {title, text, date}
+
+Endpoint to get all task = GET/tasklist
+Output = {title, text, date}
+
+Endpoint to get task of a user = GET/tasklist/user/:userId
+output Data = {title, text, date}
+
+Endpoint to update a task = PUT/tasklist/:taskId
+params = userId
+Input Data = { title, text}
+
+Endpoint to delete a task = DELETE/tasklist/:taskId
+params = taskId
