@@ -16,7 +16,12 @@ const createUserSchema = [
     body("password").isLength({min : 8}).exists(),
 ];
 
+const createTaskSchema = [
+    body("title").isString().isLength({min : 6, max: 15}).exists(),
+    body("text").isString().isLength({min : 3}).exists(),
+];
 
 
-module.exports = {validate, createUserSchema};
+
+module.exports = {validate, createUserSchema, createTaskSchema};
 
