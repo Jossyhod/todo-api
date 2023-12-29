@@ -17,8 +17,8 @@ const createUserSchema = [
 ];
 
 const createTaskSchema = [
-    body("title").isString().isLength({min : 6, max: 15}).exists(),
-    body("text").isString().isLength({min : 3}).exists(),
+    body("title").isString().isLength({min : 3, max: 15}).exists(),
+    body("text").isString().isLength({min : 1}).exists(),
 ];
 
 

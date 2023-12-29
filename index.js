@@ -4,18 +4,21 @@ const mongoose = require("mongoose");
 const argon2 = require("argon2");
 const router = express.Router();
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
 const {
   validate,
   createUserSchema,
   createTaskSchema,
-} = require("./db/validation.schema");
+} = require("./utils/validation.schema");
 
 // const {query, validationResult} = require("express-validator");
-const Users = require("./db/user.schema");
-const Task = require("./db/task.schema");
+const Users = require("./model/user.schema");
+const Task = require("./model/task.schema");
+const RefreshToken = require("./utils/refresh.schema");
 
-mongoose.connect("mongodb://127.0.0.1:27017/taskdb");
+mongoose.connect(process.env.DATABASE_URL);
 
 mongoose.connection.on("open", () => console.log("Connected to Database"));
 
@@ -26,7 +29,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.json({ message: "my name is Joseph" });
+  res.json({ message: "my name" });
 });
 
 const port = 5000;
@@ -69,6 +72,7 @@ app.post("/signup", createUserSchema, validate, async (req, res) => {
     email,
     password: hash,
   });
+
   delete signUp.password;
   return res
     .status(201)
@@ -85,12 +89,17 @@ app.get("/users", async (req, res) => {
 
 // To get single user
 app.get("/users/:userId", async (req, res) => {
-  const { name, email, passpwrd } = req.body;
   const { userId } = req.params;
 
   const user = await Users.findById(userId).populate("tasks").exec();
 
-  res.json(user);
+  if (!user) {
+    return res.status(400).json({ message: "User not found", data: user });
+  }
+
+  delete user.password;
+
+  return res.status(200).json({ message: "Successful", data: user });
 });
 
 app.post("/login", async (req, res) => {
@@ -108,8 +117,25 @@ app.post("/login", async (req, res) => {
     return res.status(401).json({ error: "Invalid email or password" });
   }
 
+//   const payload =
+//   {
+//     id: user._id,
+//     email: user.email
+//   }
+
+//   const accessToken = generateAccessToken(payload);
+//   const refreshToken = refreshAccessToken(payload);
+
+//   await RefreshToken.create({
+//     token : refreshToken,
+//     id : user._id
+//   });
+
+// res.json({accessToken, refreshToken});
+
   delete user.password;
   return res.status(200).json({ message: "Login was Successful", data: user });
+
 });
 
 app.delete("/users/:id", async (req, res) => {
@@ -125,6 +151,8 @@ app.post(
   createTaskSchema,
   validate,
   async (req, res) => {
+    console.log(req.body);
+
     const { userId } = req.params;
     const { title, text } = req.body;
     const user = await Users.findById(userId);
@@ -159,16 +187,17 @@ app.get("/tasklist/:userId", async (req, res) => {
     .populate("user", "name email")
     .exec();
 
-    return res.status(200).json({ message: "Successful", data : tasks });
-
+  return res.status(200).json({ message: "Successful", data: tasks });
 });
 
 app.put("/tasklist/:taskId", createTaskSchema, validate, async (req, res) => {
+  // var id = new mongoose.Types.ObjectId(req.params.taskId);
   const { title, text } = req.body;
 
   const editedTask = await Task.findByIdAndUpdate(
-    { id: req.params.taskId },
-    { title, text }
+    { _id: req.params.taskId },
+    { title, text },
+    { new: true }
   );
 
   res.json(editedTask);
@@ -182,6 +211,35 @@ app.delete("/tasklist/:taskId", async (req, res) => {
   res.json(task);
 });
 
+// Check if the user credentials are correct
+// on login create a token for the user and sends to frontend
+// authenticate the token for a particular user using the token secret
+// refresh user token after a given time.
+// when both token and refresh token expires server logs user out.
+
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers["authorization"];
+
+  const token = authHeader && authHeader.split("")[1];
+  if(token === null) return res.sendstatus(401);
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+    if(err) return res.sendstatus(401);
+      
+    req.user = user
+
+    next();
+  })
+
+}
+
+
 app.listen(port, () => {
   console.log(`App is running on ${port}`);
 });
+
+// app.post("/test/:userId", async(req, res) => {
+//  console.log("Body", req.body);
+//  console.log("Query", req.query);
+//  console.log("Param", req.params);
+
+// });
