@@ -32,7 +32,7 @@ app.get("/", (req, res) => {
   res.json({ message: "my name" });
 });
 
-const port = 5000;
+const port = process.env.PORT || 5000;
 
 // app.post("/users", createUserSchema, validate, async (req, res) => {
 //   const { name, email, password } = req.body;
